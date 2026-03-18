@@ -1,4 +1,5 @@
 import orderModele from "../models/order.modele.js";
+import productModele from "../models/product.modele.js";
 import myResponse from "../utils/customresponse.js";
 
 const getAllOrders = async (req, res, next) => {
@@ -28,6 +29,15 @@ const createOrder = async (req, res, next) => {
   try {
     const { id } = req.user;
     const new_order = await orderModele.create({ userId: id, ...req.body });
+    for (let item of req.body.products) {
+      await productModele.findByIdAndUpdate(
+        item.productId,
+        {
+          stock: stock - item.quantity,
+        },
+        { new: true },
+      );
+    }
     return myResponse(res, 201, "Order was successfully created", new_order);
   } catch (error) {
     next(error);
